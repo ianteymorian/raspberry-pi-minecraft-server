@@ -126,6 +126,11 @@ flowchart TD
     J --> D
 ```
 
+## Documentation
+
+- 📖 **[Setup Guide](SETUP.md)** — Complete step-by-step instructions for building the server from scratch.
+- ⚡ **[Commands](COMMANDS.md)** — Quick reference for Minecraft, Raspberry Pi, networking, backups, and administration commands.
+
 ## Screenshots
 
 <img width="2388" height="1384" alt="IMG_9883" src="https://github.com/user-attachments/assets/06d8e1ef-1e6c-4cdd-bb8c-e5b2285d9c59" />
