@@ -567,8 +567,7 @@ ssh admin@192.168.10.2
 ssh -i "$env:USERPROFILE\.ssh\picraft_backup_ed25519" admin@192.168.10.2 "echo AUTOMATIC_BACKUP_SSH_WORKS"
 ```
 
-> [!CAUTION]
-> Never upload the private SSH key to GitHub.
+
 
 ---
 
