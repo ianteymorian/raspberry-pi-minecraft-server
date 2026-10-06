@@ -221,8 +221,7 @@ Then continue.
 >
 > The key is only required to initially connect the new Pi to your account.
 
-> [!CAUTION]
-> Never put a Raspberry Pi Connect auth key in GitHub.
+
 
 ---
 
@@ -867,8 +866,6 @@ Playit will provide a claim link.
 
 Open the claim link in your browser and connect the Raspberry Pi agent to your Playit account.
 
-> [!CAUTION]
-> Never publish the Playit claim URL or authentication token on GitHub.
 
 Create a Minecraft Java tunnel that points to:
 
@@ -1168,8 +1165,6 @@ Replace:
 
 with your dashboard password.
 
-> [!CAUTION]
-> Never put the real dashboard password in this GitHub repository.
 
 Reload systemd:
 
@@ -1305,8 +1300,6 @@ Open the authentication URL.
 
 Approve the Raspberry Pi.
 
-> [!CAUTION]
-> Do not publish Tailscale authentication URLs or keys.
 
 Check the private Tailscale IP:
 
