@@ -1594,14 +1594,6 @@ It should return:
 AUTOMATIC_BACKUP_SSH_WORKS
 ```
 
-> [!CAUTION]
-> Never upload this file to GitHub:
->
-> ```text
-> picraft_backup_ed25519
-> ```
->
-> It is the private SSH key.
 
 ---
 
