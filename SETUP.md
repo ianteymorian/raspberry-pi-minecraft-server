@@ -113,8 +113,6 @@ admin
 
 Create your own strong password.
 
-> [!WARNING]
-> Never put your Raspberry Pi password in GitHub.
 
 ---
 
