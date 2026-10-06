@@ -1,139 +1,407 @@
 # PiCraftSMP Setup Guide
 
-This documents the actual PiCraftSMP build: a Paper Minecraft server on a Raspberry Pi 4 (8 GB), two public player routes (Playit and Port Warp), a private web dashboard, Tailscale remote administration, and automated off-device backups to Windows.
+This guide explains how PiCraftSMP was built from scratch.
+
+PiCraftSMP is a 24/7 Paper Minecraft Java server running on a Raspberry Pi 4 with:
+
+- 8 GB RAM
+- Raspberry Pi OS Lite 64-bit
+- Raspberry Pi Connect remote administration
+- SSH backup access
+- Playit public access
+- Port Warp as an additional public route
+- Custom Minecraft server icon and MOTD
+- Private web dashboard
+- Tailscale private remote access
+- Automated backups every 48 hours
+- Automatic backup transfer to a Windows PC
+- 14-day backup retention
 
 > [!IMPORTANT]
-> This guide is based on the commands used during the original build. Public tunnel addresses, authentication links/tokens, passwords, and SSH private-key contents are intentionally not included. Replace values in `<ANGLE_BRACKETS>` with your own.
+> This repository does not contain passwords, authentication keys, private SSH keys, Playit claim tokens, Port Warp credentials, Tailscale authentication details, or the live public Minecraft addresses.
+>
+> Never put those values in a public GitHub repository.
 
-## 1. What you need before you start
+---
 
-PiCraftSMP was built with:
+# 1. Hardware
+
+PiCraftSMP was built using:
 
 - Raspberry Pi 4
-- 8 GB RAM (7.64 GB usable shown by the dashboard)
-- A microSD card (32 GB or larger is recommended)
-- A microSD card reader, or an SD adapter/reader that your computer can use
-- A proper Raspberry Pi 4 USB-C power supply
-- Active cooling (fan/heatsink)
-- Ethernet cable if you want to use wired networking; Wi-Fi also works
-- Windows PC for off-device backups
-- An Internet connection
+- 8 GB RAM
+- microSD card
+- Active cooling
+- USB-C Raspberry Pi power supply
+- Wi-Fi or Ethernet
+- Windows PC for backup storage
 
-You **do not need a monitor, keyboard, or mouse for the Pi** if you follow the headless setup below. We will enable SSH before the Pi ever boots so you can control it from your normal computer.
+A **32 GB or larger microSD card** is recommended.
+
+You also need a microSD card reader so the card can be connected to your normal computer.
+
+You do **not** need a monitor, keyboard, or mouse connected to the Raspberry Pi.
+
+PiCraftSMP is configured as a **headless server** and is controlled remotely.
+
+---
+
+# 2. Install Raspberry Pi Imager
+
+On your normal Windows PC, go to:
+
+<https://www.raspberrypi.com/software/>
+
+Download and install:
+
+```text
+Raspberry Pi Imager
+```
+
+Insert the microSD card into your computer.
+
+Open Raspberry Pi Imager.
 
 > [!CAUTION]
-> Flashing the microSD card erases everything already on that card. Double-check that you select the correct drive in Raspberry Pi Imager.
+> Writing Raspberry Pi OS to the microSD card will erase everything currently stored on that card.
+>
+> Make sure you select the correct storage device.
 
-## 2. Install Raspberry Pi Imager on your computer
+---
 
-Do these steps on your normal Windows PC, not on the Raspberry Pi.
+# 3. Configure Raspberry Pi OS
 
-1. Go to the official Raspberry Pi software page: <https://www.raspberrypi.com/software/>.
-2. Download **Raspberry Pi Imager** for Windows.
-3. Run the installer and finish the installation.
-4. Put the microSD card into your computer's card reader.
-5. Open **Raspberry Pi Imager**.
-
-Raspberry Pi Imager is the program that downloads Raspberry Pi OS and writes it to the microSD card.
-
-## 3. Flash Raspberry Pi OS to the microSD card
-
-In Raspberry Pi Imager:
-
-1. Select **Raspberry Pi 4** as the Raspberry Pi device.
-2. Select **Raspberry Pi OS Lite (64-bit)** as the operating system.
-   - Use the 64-bit version.
-   - The **Lite** version is intentional. A Minecraft server does not need a desktop interface.
-3. Select your **microSD card** as the storage device.
-4. Continue to the OS/customisation settings before writing the card.
-
-Configure the Pi with these settings:
-
-| Setting | PiCraftSMP value / what to enter |
-|---|---|
-| Hostname | `RasPi-Sever` was used on the original build. `picraftsmp` is a cleaner name if starting again. |
-| Username | `anything you like` |
-| Password | Create a strong password. |
-| Wi-Fi SSID | Your Wi-Fi network name, if using Wi-Fi |
-| Wi-Fi password | Your Wi-Fi password, if using Wi-Fi |
-| Wi-Fi country | The country where the Pi is physically being used |
-| Time zone | Your local time zone |
-| SSH / remote access | **Enable SSH** and allow password authentication for the initial setup |
-
-If Imager offers **Raspberry Pi Connect**, you may enable it as an additional way to reach the Pi from a browser. SSH is still the main method used in this guide.
-
-Now write the card:
-
-1. Check the selected storage device one more time.
-2. Click the button to write/flash the operating system.
-3. Accept the warning that the selected microSD card will be erased.
-4. Wait while Imager writes and verifies the card. Do not remove it during this process.
-5. When Imager says it has finished, safely eject the microSD card from your computer.
-
-You now have a bootable Raspberry Pi OS microSD card.
-
-## 4. Assemble the Raspberry Pi and boot it for the first time
-
-Keep the Raspberry Pi unplugged while connecting everything.
-
-1. Insert the flashed microSD card into the microSD slot on the underside of the Raspberry Pi.
-2. Make sure the heatsink/fan or other active cooling is installed correctly.
-3. If using Ethernet, connect the Ethernet cable from the Pi to your router or network.
-4. If using Wi-Fi, you do not need an Ethernet cable because the Wi-Fi credentials were saved by Imager.
-5. Connect the Raspberry Pi power supply last.
-6. Wait about 2-3 minutes for the first boot. The first boot can take longer than later boots.
-
-Do not unplug the Pi just because nothing appears on your PC. Raspberry Pi OS Lite is running on the Pi itself; you connect to it over the network.
-
-## 5. Connect to the Raspberry Pi for the first time
-
-On your Windows PC, open **PowerShell** or **Windows Terminal**.
-
-If you used the original hostname, first try:
-
-```powershell
-ssh admin@RasPi-Sever.local
-```
-
-If you chose `picraftsmp` instead, use:
-
-```powershell
-ssh admin@picraftsmp.local
-```
-
-The first time you connect, Windows may show a message saying the authenticity of the host cannot be established and ask whether you want to continue. Type:
+In Raspberry Pi Imager, select:
 
 ```text
-yes
+Device:
+Raspberry Pi 4
 ```
 
-Then enter the password you created in Raspberry Pi Imager. The password will not appear on the screen while you type it; that is normal.
-
-When the connection works, your prompt should look roughly like this:
+For the operating system select:
 
 ```text
-admin@RasPi-Sever:~ $
+Raspberry Pi OS Lite (64-bit)
 ```
 
-### If the `.local` hostname does not work
+The **Lite** edition is intentional.
 
-Find the Pi's IP address in your router's connected-device/client list, then connect using the IP address:
+A Minecraft server does not need the Raspberry Pi desktop environment, so the Lite version saves resources.
+
+Select your microSD card as the storage device.
+
+Continue to the configuration screens.
+
+---
+
+## Hostname
+
+The original PiCraftSMP Raspberry Pi used:
+
+```text
+RasPi-Sever
+```
+
+You can use this, although a cleaner hostname for a new build would be:
+
+```text
+picraftsmp
+```
+
+---
+
+## User account
+
+The original PiCraftSMP user is:
+
+```text
+admin
+```
+
+Create your own strong password.
+
+> [!WARNING]
+> Never put your Raspberry Pi password in GitHub.
+
+---
+
+## Wi-Fi
+
+If you want the Raspberry Pi to use Wi-Fi, enter:
+
+```text
+Wi-Fi SSID:
+<YOUR_WIFI_NAME>
+```
+
+```text
+Wi-Fi password:
+<YOUR_WIFI_PASSWORD>
+```
+
+Select the correct Wi-Fi country for the location where the Raspberry Pi is being used.
+
+If you are using Ethernet, the Pi can also connect automatically when an Ethernet cable is connected.
+
+---
+
+## Time zone
+
+Select your local time zone.
+
+For example, the PiCraftSMP server is located in China, so its local configuration can use the appropriate China/Shanghai time zone.
+
+---
+
+# 4. Enable Raspberry Pi Connect
+
+PiCraftSMP uses **Raspberry Pi Connect** as its main remote administration method.
+
+This lets you access the Raspberry Pi terminal from a web browser without needing a monitor or keyboard attached to the Pi.
+
+In Raspberry Pi Imager, find the:
+
+```text
+Raspberry Pi Connect
+```
+
+configuration step.
+
+Turn on:
+
+```text
+Enable Raspberry Pi Connect
+```
+
+Click:
+
+```text
+Open Raspberry Pi Connect
+```
+
+Your normal web browser will open.
+
+Sign in using your:
+
+```text
+Raspberry Pi ID
+```
+
+If you do not already have a Raspberry Pi ID, create one.
+
+---
+
+## Create the Raspberry Pi Connect auth key
+
+Raspberry Pi Connect will open a:
+
+```text
+New auth key
+```
+
+page.
+
+Create the auth key.
+
+The key is a **single-use temporary authentication token** that allows the new Raspberry Pi to link itself to your Raspberry Pi Connect account when it boots.
+
+Your browser should ask for permission to reopen Raspberry Pi Imager.
+
+Allow it.
+
+Raspberry Pi Imager should then show that it received the authentication token.
+
+If it does not appear automatically, open:
+
+```text
+Having trouble?
+```
+
+on the Raspberry Pi Connect page.
+
+Copy the token and paste it into the token field in Raspberry Pi Imager.
+
+Then continue.
+
+> [!IMPORTANT]
+> Personal Raspberry Pi Connect auth keys currently expire after **6 hours**.
+>
+> Flash and boot the Raspberry Pi while the key is still valid and make sure the Pi has Internet access.
+>
+> The key is only required to initially connect the new Pi to your account.
+
+> [!CAUTION]
+> Never put a Raspberry Pi Connect auth key in GitHub.
+
+---
+
+# 5. Enable SSH as a backup
+
+Raspberry Pi Connect is the main remote-access method used by PiCraftSMP.
+
+However, SSH is also enabled as a useful backup.
+
+In Raspberry Pi Imager, enable:
+
+```text
+SSH
+```
+
+For the initial setup, allow:
+
+```text
+Password authentication
+```
+
+This lets you connect from another computer using:
 
 ```powershell
 ssh admin@<PI_IP_ADDRESS>
 ```
 
-For example, PiCraftSMP's final local Wi-Fi address was:
+---
+
+# 6. Flash the microSD card
+
+Check all of the Raspberry Pi Imager settings.
+
+You should now have configured:
+
+- Raspberry Pi 4
+- Raspberry Pi OS Lite 64-bit
+- Hostname
+- `admin` user
+- Password
+- Wi-Fi if required
+- Wi-Fi country
+- Time zone
+- Raspberry Pi Connect
+- SSH
+
+Select the option to write the operating system.
+
+Confirm that the selected microSD card can be erased.
+
+Wait for Raspberry Pi Imager to:
+
+1. Write Raspberry Pi OS.
+2. Verify the microSD card.
+
+Do not remove the card during this process.
+
+When Imager reports that it has finished, safely eject the microSD card.
+
+---
+
+# 7. First Raspberry Pi boot
+
+Make sure the Raspberry Pi is unplugged.
+
+Insert the microSD card into the microSD card slot on the underside of the Raspberry Pi.
+
+Make sure the cooling system is connected.
+
+If using Ethernet, connect the Ethernet cable.
+
+Then connect the USB-C power supply.
+
+The Raspberry Pi will start automatically.
+
+Wait approximately:
+
+```text
+2-3 minutes
+```
+
+The first boot can take longer than later boots.
+
+The Pi needs Internet access during this boot so Raspberry Pi Connect can use the temporary auth key and register the Pi with your Raspberry Pi ID.
+
+---
+
+# 8. Open Raspberry Pi Connect
+
+On your normal computer, open:
+
+<https://connect.raspberrypi.com/>
+
+Sign in using the same Raspberry Pi ID used during Raspberry Pi Imager setup.
+
+Your Raspberry Pi should appear in your device list.
+
+Select it.
+
+Open:
+
+```text
+Remote shell
+```
+
+You now have a Raspberry Pi terminal directly in your web browser.
+
+It should look similar to:
+
+```text
+admin@RasPi-Sever:~ $
+```
+
+From this point onward, commands marked as:
+
+```text
+bash
+```
+
+are entered into the Raspberry Pi terminal.
+
+For PiCraftSMP, this normally means the **Raspberry Pi Connect Remote Shell**.
+
+---
+
+# 9. SSH backup access
+
+You can also access the Pi using SSH.
+
+On a Windows PC, open PowerShell.
+
+If `.local` hostnames are working:
+
+```powershell
+ssh admin@RasPi-Sever.local
+```
+
+Or, if you used the cleaner hostname:
+
+```powershell
+ssh admin@picraftsmp.local
+```
+
+The first time you connect, SSH may ask whether you trust the computer.
+
+Type:
+
+```text
+yes
+```
+
+Enter the Raspberry Pi password.
+
+Nothing will appear on screen while typing the password.
+
+That is normal.
+
+If the `.local` hostname does not work, use the Pi's IP address.
+
+For example, the final PiCraftSMP Wi-Fi IP was:
 
 ```powershell
 ssh admin@192.168.10.2
 ```
 
-Your Pi may receive a different IP address. Do not assume yours will be `192.168.10.2`.
+Your Raspberry Pi may have a different IP.
 
-## 6. Check the Pi and install the base software
+---
 
-Everything below this point is typed **inside the SSH session on the Raspberry Pi**, unless the guide specifically says to use the Windows PC.
+# 10. Check the Raspberry Pi
 
 Check the CPU architecture:
 
@@ -141,112 +409,321 @@ Check the CPU architecture:
 uname -m
 ```
 
-For this build, it should report:
+The Raspberry Pi 4 used for PiCraftSMP reports:
 
 ```text
 aarch64
 ```
 
-Check your IP address:
+Check the IP address:
 
 ```bash
 hostname -I
 ```
 
-Check free disk space and memory:
+Check RAM:
 
 ```bash
-df -h /
 free -h
 ```
 
-Check the Raspberry Pi temperature:
+Check storage:
+
+```bash
+df -h /
+```
+
+Check temperature:
 
 ```bash
 vcgencmd measure_temp
 ```
 
-Update the Pi and install Java plus `wget`:
+The PiCraftSMP dashboard has shown approximately:
+
+```text
+7.64 GB usable RAM
+```
+
+The server uses active cooling.
+
+---
+
+# 11. Update Raspberry Pi OS
+
+Update the package list:
 
 ```bash
 sudo apt update
+```
+
+Install available system updates:
+
+```bash
 sudo apt full-upgrade -y
+```
+
+---
+
+# 12. Install Java
+
+Install Java and `wget`:
+
+```bash
 sudo apt install openjdk-25-jre-headless wget -y
+```
+
+Check Java:
+
+```bash
 java -version
 ```
 
-The original build initially installed OpenJDK 25. The later working `minecraft.service` used the existing Java 21 ARM64 binary at `/usr/lib/jvm/java-21-openjdk-arm64/bin/java`. Before recreating the service on a different Pi, verify the Java path:
+Find the exact Java executable:
 
 ```bash
 readlink -f "$(command -v java)"
 ```
 
-If your path differs, use the path printed by that command in `ExecStart` below.
+The later working PiCraftSMP service used:
 
-## 7. Install Paper Minecraft
+```text
+/usr/lib/jvm/java-21-openjdk-arm64/bin/java
+```
 
-Create the server directory:
+Your installation may return a different path.
+
+Use the path actually shown on your Pi when configuring the Minecraft service.
+
+---
+
+# 13. Create the Minecraft directory
+
+Create the Minecraft server folder:
 
 ```bash
 mkdir ~/minecraft
+```
+
+Enter it:
+
+```bash
 cd ~/minecraft
 ```
 
-The Paper build downloaded during the original setup was:
+---
+
+# 14. Install Paper Minecraft
+
+The Paper build downloaded during the original PiCraftSMP setup was:
 
 ```bash
 wget https://fill-data.papermc.io/v1/objects/7b7b3b43c009103e1971a0576c26f655a7dd9b56a0a2a4438e352c03a7fecd08/paper-26.2-123.jar -O paper.jar
 ```
 
-PiCraftSMP is an 8 GB Pi, so Minecraft was run with 2 GB initial heap and a 4 GB maximum heap:
+Start Paper:
 
 ```bash
 java -Xms2G -Xmx4G -jar paper.jar --nogui
 ```
 
-On the first run Paper creates `eula.txt` and exits. Accept the Minecraft EULA:
+The memory configuration means:
+
+```text
+-Xms2G = start with 2 GB
+-Xmx4G = maximum of 4 GB
+```
+
+Paper will create its files and then stop because the Minecraft EULA has not yet been accepted.
+
+---
+
+# 15. Accept the Minecraft EULA
+
+Open:
 
 ```bash
 nano eula.txt
 ```
 
-Change:
+Find:
 
 ```text
 eula=false
 ```
 
-to:
+Change it to:
 
 ```text
 eula=true
 ```
 
-Save with `Ctrl+O`, press Enter, then exit with `Ctrl+X`.
+Save using:
 
-Start Paper again:
+```text
+Ctrl+O
+```
+
+Press Enter.
+
+Exit using:
+
+```text
+Ctrl+X
+```
+
+Start Minecraft again:
 
 ```bash
 java -Xms2G -Xmx4G -jar paper.jar --nogui
 ```
 
-Stop the server safely from its console with:
+Wait for the server to finish starting.
+
+To stop it safely, type:
 
 ```text
 stop
 ```
 
-The working server later reported `Paper 1.21.11` in the PiCraft dashboard.
+The finished PiCraftSMP server later reported:
 
-## 8. Configure Paper for automatic startup
+```text
+Paper 1.21.11
+```
 
-Create the systemd service:
+---
+
+# 16. Customize the Minecraft server list
+
+PiCraftSMP was customized so that the Minecraft Multiplayer menu shows:
+
+- A custom Raspberry Pi icon
+- `PiCraftSMP` in red
+- `SURVIVAL • 1.21.11` underneath
+
+---
+
+## Configure the MOTD
+
+Go to the Minecraft folder:
+
+```bash
+cd ~/minecraft
+```
+
+Open:
+
+```bash
+nano server.properties
+```
+
+Find the line beginning with:
+
+```text
+motd=
+```
+
+Set it to:
+
+```text
+motd=\u00A7cPiCraftSMP\n\u00A7fSURVIVAL • 1.21.11
+```
+
+The formatting codes mean:
+
+```text
+\u00A7c = red
+\u00A7f = white
+\n      = new line
+```
+
+The Minecraft server list will therefore display:
+
+```text
+PiCraftSMP
+SURVIVAL • 1.21.11
+```
+
+with the first line in red.
+
+Save using:
+
+```text
+Ctrl+O
+```
+
+Press Enter.
+
+Exit using:
+
+```text
+Ctrl+X
+```
+
+---
+
+## Add the custom server icon
+
+Minecraft uses a file named:
+
+```text
+server-icon.png
+```
+
+The image needs to be:
+
+```text
+64 × 64 pixels
+PNG format
+Filename: server-icon.png
+```
+
+The final file must be located at:
+
+```text
+/home/admin/minecraft/server-icon.png
+```
+
+If the icon is stored on your Windows PC, open PowerShell in the folder containing the image.
+
+Copy it to the Pi:
+
+```powershell
+scp server-icon.png admin@192.168.10.2:/home/admin/minecraft/server-icon.png
+```
+
+If your Pi has a different IP address, replace:
+
+```text
+192.168.10.2
+```
+
+with your Pi's address.
+
+Back in Raspberry Pi Connect, check the image:
+
+```bash
+ls -lh ~/minecraft/server-icon.png
+```
+
+The filename should be:
+
+```text
+server-icon.png
+```
+
+---
+
+# 17. Make Minecraft start automatically
+
+Create a systemd service:
 
 ```bash
 sudo nano /etc/systemd/system/minecraft.service
 ```
 
-The working PiCraftSMP service was:
+Add:
 
 ```ini
 [Unit]
@@ -265,117 +742,232 @@ TimeoutStopSec=60
 WantedBy=multi-user.target
 ```
 
-If Step 6 showed a different Java binary, change only the Java path in `ExecStart`.
+> [!IMPORTANT]
+> If the Java command earlier returned a different Java path, use that path in `ExecStart`.
 
-Then enable and start the service:
+Reload systemd:
 
 ```bash
 sudo systemctl daemon-reload
+```
+
+Enable automatic startup:
+
+```bash
 sudo systemctl enable minecraft
+```
+
+Start Minecraft:
+
+```bash
 sudo systemctl start minecraft
+```
+
+Check it:
+
+```bash
 sudo systemctl status minecraft
 ```
 
-Useful checks:
+Quick check:
 
 ```bash
 systemctl is-active minecraft
-sudo journalctl -u minecraft -f
+```
+
+It should return:
+
+```text
+active
+```
+
+Check that Minecraft is listening on port `25565`:
+
+```bash
 ss -ltn | grep 25565
 ```
 
-## 9. Local networking
-
-Check the Pi's addresses:
+View live Minecraft logs:
 
 ```bash
-hostname -I
+sudo journalctl -u minecraft -f
 ```
 
-During the final Wi-Fi setup, PiCraftSMP used:
+Press:
+
+```text
+Ctrl+C
+```
+
+to exit the log viewer.
+
+---
+
+# 18. Check the customized server
+
+Open Minecraft Java Edition.
+
+Go to:
+
+```text
+Multiplayer
+```
+
+Add the server using its local IP address first.
+
+For the final PiCraftSMP Wi-Fi network this was:
 
 ```text
 192.168.10.2:25565
 ```
 
-An earlier Ethernet configuration used `192.168.1.9`. The local IP will depend on the network, so do not copy these addresses blindly.
+Refresh the server list.
 
-SSH example from the final Wi-Fi setup:
+You should now see:
 
-```bash
-ssh admin@192.168.10.2
+```text
+PiCraftSMP
+SURVIVAL • 1.21.11
 ```
 
-## 10. Install Playit for the global public route
+together with the custom `server-icon.png`.
 
-PiCraftSMP uses Playit as the global/fallback route so players can connect without router port forwarding or installing extra software.
+---
 
-The original setup first imported the Playit key:
+# 19. Install Playit
+
+PiCraftSMP uses **Playit** to give Minecraft players a public connection without requiring traditional router port forwarding.
+
+Import the Playit key:
 
 ```bash
 curl -SsL https://playit-cloud.github.io/ppa/key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/playit.gpg
 ```
 
-The final package-repository setup used:
+Configure the package repository:
 
 ```bash
 sudo chmod 0644 /usr/share/keyrings/playit.gpg
+```
+
+```bash
 sudo curl -fsSL -o /etc/apt/sources.list.d/playit.list https://packages.playit.gg/repo-files/playit-debian.list
+```
+
+Update:
+
+```bash
 sudo apt update
+```
+
+Install Playit:
+
+```bash
 sudo apt install playit -y
 ```
 
-Claim the Pi's Playit agent:
+Run:
 
 ```bash
 playit setup
 ```
 
-Open the claim link it prints and connect the agent to your Playit account. Do not put the claim URL/token in a public repository.
+Playit will provide a claim link.
 
-Create a Minecraft Java tunnel pointing to:
+Open the claim link in your browser and connect the Raspberry Pi agent to your Playit account.
+
+> [!CAUTION]
+> Never publish the Playit claim URL or authentication token on GitHub.
+
+Create a Minecraft Java tunnel that points to:
 
 ```text
 127.0.0.1:25565
 ```
 
-The working installation provides a `playit` systemd service. Useful controls are:
+Useful Playit commands:
 
 ```bash
 sudo systemctl start playit
+```
+
+```bash
 sudo systemctl stop playit
+```
+
+```bash
 sudo systemctl restart playit
+```
+
+```bash
 sudo systemctl status playit
+```
+
+```bash
 sudo journalctl -u playit -f
 ```
 
-The public Playit hostname used by the live server is intentionally omitted from this repository.
+The live PiCraftSMP Playit hostname is intentionally not included in this repository.
 
-## 11. Install Port Warp for the China / Hong Kong route
+---
 
-Port Warp provides a second public route to the same Minecraft server. In PiCraftSMP it is used as the China/Hong Kong route while Playit remains the global fallback.
+# 20. Install Port Warp
 
-Install Port Warp on the ARM64 Pi:
+Port Warp provides an **additional public route** to the same Minecraft server.
+
+It is not required to use a Hong Kong route.
+
+For the original PiCraftSMP setup:
+
+```text
+Minecraft server location: China
+Playit route: Japan
+Port Warp route: Hong Kong
+```
+
+The Hong Kong route was selected because of the location and networking requirements of this particular server.
+
+If you recreate PiCraftSMP somewhere else, choose whichever Port Warp location provides the best connection for you and your players.
+
+Both public routes ultimately connect to the same local Minecraft server:
+
+```text
+127.0.0.1:25565
+```
+
+Install Port Warp:
 
 ```bash
 curl -fsSL https://portwarp.com/install | bash
 ```
 
-The original installation reported Port Warp `v0.3.7` at `/usr/local/bin/pwrp`.
+The original PiCraftSMP installation reported:
 
-Authenticate the Pi:
+```text
+Port Warp v0.3.7
+```
+
+at:
+
+```text
+/usr/local/bin/pwrp
+```
+
+Log in:
 
 ```bash
 pwrp login
 ```
 
-Approve the short-code login in a browser, then list the account's tunnels:
+Approve the login in your browser.
+
+List tunnels:
 
 ```bash
 pwrp tunnels
 ```
 
-Create the Minecraft tunnel with:
+Configure the Minecraft tunnel using:
 
 ```text
 Name: PiCraftSMP
@@ -384,46 +976,102 @@ Local host: 127.0.0.1
 Local port: 25565
 ```
 
-Connect it:
+Connect:
 
 ```bash
 pwrp connect
 ```
 
-To verify a detached tunnel:
+Check it:
 
 ```bash
 pwrp ps --once
 ```
 
-PiCraftSMP was then configured to reconnect automatically after reboot:
+Configure automatic reconnection:
 
 ```bash
 pwrp connect --all --save --detach
+```
+
+Enable the Port Warp service:
+
+```bash
 sudo pwrp service enable
+```
+
+Allow the `admin` user service to remain running without an interactive login:
+
+```bash
 sudo loginctl enable-linger admin
 ```
 
-The working installation showed a systemd **user** unit named `portwarp.service`, with autostart enabled and all enabled tunnels selected at boot.
+The live Port Warp hostname and public port are intentionally not included in the repository.
 
-The live Port Warp public hostname and port are intentionally omitted from this repository.
+---
 
-## 12. Build the PiCraft dashboard
+# 21. Build the PiCraft dashboard
 
-The dashboard runs privately on port `8080` and provides system metrics, Minecraft status/player information, tunnel status, network information, and server controls.
+PiCraftSMP has a custom web dashboard for monitoring and controlling the server.
 
-Install the dashboard tools:
+The dashboard displays information including:
+
+- Minecraft status
+- Online players
+- Raspberry Pi temperature
+- CPU usage
+- RAM usage
+- Storage
+- Network usage
+- Minecraft latency
+- Playit status
+- Port Warp status
+- Historical metrics
+- Server uptime
+
+It also provides administration controls.
+
+The dashboard runs on:
+
+```text
+Port 8080
+```
+
+Install Python tools:
 
 ```bash
 sudo apt update
+```
+
+```bash
 sudo apt install python3-venv python3-pip -y
+```
+
+Create the dashboard folder:
+
+```bash
 mkdir -p ~/picraft-dashboard
+```
+
+Enter it:
+
+```bash
 cd ~/picraft-dashboard
+```
+
+Create the virtual environment:
+
+```bash
 python3 -m venv venv
+```
+
+Install the Python packages:
+
+```bash
 venv/bin/pip install flask psutil mcstatus
 ```
 
-Verify the Python environment:
+Test them:
 
 ```bash
 venv/bin/python -c "import flask, psutil, mcstatus; print('PiCraft Dashboard ready')"
@@ -432,25 +1080,34 @@ venv/bin/python -c "import flask, psutil, mcstatus; print('PiCraft Dashboard rea
 Install Gunicorn:
 
 ```bash
-cd ~/picraft-dashboard
 venv/bin/pip install gunicorn
 ```
 
-Place the dashboard application in:
+The dashboard application is stored at:
 
 ```text
 /home/admin/picraft-dashboard/app.py
 ```
 
-### Give the dashboard only the required system permissions
+---
 
-First verify the systemctl path:
+# 22. Give the dashboard system permissions
+
+The dashboard needs permission to perform specific server-management tasks.
+
+Check the `systemctl` location:
 
 ```bash
 command -v systemctl
 ```
 
-The Pi returned `/usr/bin/systemctl`. The dashboard sudoers rules were then created with:
+The PiCraftSMP Raspberry Pi returned:
+
+```text
+/usr/bin/systemctl
+```
+
+Create the dashboard sudo rules:
 
 ```bash
 sudo tee /etc/sudoers.d/picraft-dashboard > /dev/null <<'EOF'
@@ -463,10 +1120,15 @@ admin ALL=(root) NOPASSWD: /usr/bin/systemctl poweroff
 EOF
 ```
 
-Lock and validate the sudoers file:
+Set secure permissions:
 
 ```bash
 sudo chmod 440 /etc/sudoers.d/picraft-dashboard
+```
+
+Validate the file:
+
+```bash
 sudo visudo -cf /etc/sudoers.d/picraft-dashboard
 ```
 
@@ -476,15 +1138,17 @@ It should report:
 /etc/sudoers.d/picraft-dashboard: parsed OK
 ```
 
-### Run the dashboard automatically
+---
 
-The original build temporarily used a simple dashboard password directly in the service. That password is **not** reproduced here. Use your own strong value for `<DASHBOARD_PASSWORD>`.
+# 23. Make the dashboard start automatically
 
-Create the service:
+Create:
 
 ```bash
 sudo nano /etc/systemd/system/picraft-dashboard.service
 ```
+
+Add:
 
 ```ini
 [Unit]
@@ -505,39 +1169,80 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-Then:
+Replace:
+
+```text
+<DASHBOARD_PASSWORD>
+```
+
+with your dashboard password.
+
+> [!CAUTION]
+> Never put the real dashboard password in this GitHub repository.
+
+Reload systemd:
 
 ```bash
 sudo systemctl daemon-reload
+```
+
+Enable and start the dashboard:
+
+```bash
 sudo systemctl enable --now picraft-dashboard
+```
+
+Check it:
+
+```bash
 sudo systemctl status picraft-dashboard --no-pager
 ```
 
-At home, the dashboard was opened at:
+On the original PiCraftSMP home network, the dashboard is available at:
 
 ```text
 http://192.168.10.2:8080
 ```
 
-Port `8080` is deliberately **not** exposed through Playit or Port Warp.
+Your Pi may have a different IP.
 
-## 13. Persistent metrics collection
+Check with:
 
-PiCraftSMP records historical dashboard metrics once per minute in:
+```bash
+hostname -I
+```
+
+Port `8080` is deliberately **not publicly exposed through Playit or Port Warp**.
+
+---
+
+# 24. Persistent dashboard metrics
+
+PiCraftSMP stores historical dashboard metrics in:
 
 ```text
 /home/admin/picraft-dashboard/history.db
 ```
 
-The collector tracks temperature, CPU, RAM, storage, upload/download, players, Minecraft query latency, Port Warp latency, and Playit latency.
-
-Place the collector at:
+The collector application is:
 
 ```text
 /home/admin/picraft-dashboard/collector.py
 ```
 
-Create its service:
+It records information including:
+
+- Temperature
+- CPU
+- RAM
+- Storage
+- Upload/download
+- Players
+- Minecraft query latency
+- Playit latency
+- Port Warp latency
+
+Create the collector service:
 
 ```bash
 sudo tee /etc/systemd/system/picraft-collector.service > /dev/null <<'EOF'
@@ -559,17 +1264,39 @@ WantedBy=multi-user.target
 EOF
 ```
 
-Enable it:
+Reload systemd:
 
 ```bash
 sudo systemctl daemon-reload
+```
+
+Enable it:
+
+```bash
 sudo systemctl enable --now picraft-collector
+```
+
+Check it:
+
+```bash
 sudo systemctl status picraft-collector --no-pager
 ```
 
-## 14. Install Tailscale for private remote administration
+---
 
-Tailscale is for the administrator, not Minecraft players. It allows the private dashboard and SSH access to remain off the public Internet.
+# 25. Install Tailscale
+
+Raspberry Pi Connect provides convenient browser-based server administration.
+
+PiCraftSMP also uses **Tailscale** for private networking.
+
+Tailscale is for the server administrator, not normal Minecraft players.
+
+It allows private access to things such as:
+
+- PiCraft dashboard
+- SSH
+- Raspberry Pi network services
 
 Install Tailscale:
 
@@ -577,44 +1304,66 @@ Install Tailscale:
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-Authenticate the Pi:
+Sign in:
 
 ```bash
 sudo tailscale up
 ```
 
-Open the authentication URL it prints and approve the Pi. Do not publish that URL.
+Open the authentication URL.
 
-Get the Pi's private Tailscale IPv4 address:
+Approve the Raspberry Pi.
+
+> [!CAUTION]
+> Do not publish Tailscale authentication URLs or keys.
+
+Check the private Tailscale IP:
 
 ```bash
 tailscale ip -4
 ```
 
-The PiCraft build used a `100.x.x.x` Tailscale address. Access the dashboard remotely with:
+It will normally look similar to:
+
+```text
+100.x.x.x
+```
+
+The dashboard can then be opened remotely at:
 
 ```text
 http://<TAILSCALE_IP>:8080
 ```
 
-The local dashboard remains:
+On the home network, the original PiCraftSMP dashboard is:
 
 ```text
 http://192.168.10.2:8080
 ```
 
-## 15. Automated Raspberry Pi backups
+---
 
-Backups are created on the Pi in:
+# 26. Create the backup folder
+
+PiCraftSMP creates a world backup every 48 hours.
+
+Create the backup directory:
 
 ```bash
 mkdir -p /home/admin/minecraft-backups
+```
+
+Check it:
+
+```bash
 ls -ld /home/admin/minecraft-backups
 ```
 
-### Backup script
+---
 
-Create `/usr/local/sbin/picraft-backup.sh` exactly as used in the working build:
+# 27. Create the Minecraft backup script
+
+Create the backup script:
 
 ```bash
 sudo tee /usr/local/sbin/picraft-backup.sh > /dev/null <<'EOF'
@@ -646,6 +1395,7 @@ restart_minecraft() {
 trap restart_minecraft EXIT
 
 echo "Creating backup..."
+
 tar -C "$MC_DIR" -czf "$BACKUP" \
     world \
     world_nether \
@@ -662,7 +1412,11 @@ echo
 echo "Backup complete:"
 echo "$BACKUP"
 EOF
+```
 
+Make it executable:
+
+```bash
 sudo chmod +x /usr/local/sbin/picraft-backup.sh
 ```
 
@@ -670,14 +1424,30 @@ Test it:
 
 ```bash
 sudo /usr/local/sbin/picraft-backup.sh
+```
+
+Check:
+
+```bash
 ls -lh ~/minecraft-backups
 ```
 
-The tested PiCraft backup was about 23 MB and produced both a `.tar.gz` archive and a `.sha256` verification file.
+A successful backup creates two files similar to:
 
-### Enforce the 48-hour interval across reboots
+```text
+PiCraft-YYYYMMDD-HHMMSS.tar.gz
+PiCraft-YYYYMMDD-HHMMSS.tar.gz.sha256
+```
 
-Create the due-check script:
+The `.tar.gz` contains the Minecraft worlds.
+
+The `.sha256` file is used to verify that the backup was copied correctly.
+
+---
+
+# 28. Make backups run every 48 hours
+
+Create:
 
 ```bash
 sudo tee /usr/local/sbin/picraft-backup-if-due.sh > /dev/null <<'EOF'
@@ -705,19 +1475,29 @@ if /usr/local/sbin/picraft-backup.sh; then
     date +%s > "$STAMP_FILE"
 fi
 EOF
+```
 
+Make it executable:
+
+```bash
 sudo chmod +x /usr/local/sbin/picraft-backup-if-due.sh
 ```
 
-Initialize the clock after a successful manual backup:
+Initialize the timer after a successful backup:
 
 ```bash
 sudo mkdir -p /var/lib/picraft-backup
-date +%s | sudo tee /var/lib/picraft-backup/last-success
-cat /var/lib/picraft-backup/last-success
 ```
 
-### Create the backup timer
+```bash
+date +%s | sudo tee /var/lib/picraft-backup/last-success
+```
+
+---
+
+# 29. Create the automatic backup timer
+
+Create the backup service:
 
 ```bash
 sudo tee /etc/systemd/system/picraft-backup.service > /dev/null <<'EOF'
@@ -729,7 +1509,11 @@ After=minecraft.service
 Type=oneshot
 ExecStart=/usr/local/sbin/picraft-backup-if-due.sh
 EOF
+```
 
+Create the timer:
+
+```bash
 sudo tee /etc/systemd/system/picraft-backup.timer > /dev/null <<'EOF'
 [Unit]
 Description=Check PiCraftSMP Backup Every Hour
@@ -744,64 +1528,108 @@ WantedBy=timers.target
 EOF
 ```
 
-Enable and verify it:
+Reload:
 
 ```bash
 sudo systemctl daemon-reload
+```
+
+Enable:
+
+```bash
 sudo systemctl enable --now picraft-backup.timer
+```
+
+Check:
+
+```bash
 systemctl status picraft-backup.timer --no-pager
 ```
 
-The timer checks hourly, but `picraft-backup-if-due.sh` only creates a backup after `172800` seconds (48 hours) have elapsed.
+The system checks every hour.
 
-## 16. Sync verified backups to Windows
+However, a new backup is only created after:
 
-The Windows laptop keeps the off-device copies in:
+```text
+172800 seconds
+```
+
+which is:
+
+```text
+48 hours
+```
+
+since the previous successful backup.
+
+---
+
+# 30. Create the Windows backup folder
+
+The Windows PC keeps verified copies of the Minecraft backups.
+
+The original location is:
 
 ```text
 C:\Users\<YOUR_USER>\Documents\PiCraft Backups
 ```
 
-### Create a dedicated SSH key
+In Windows PowerShell:
 
-Run in Windows PowerShell:
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\PiCraft Backups"
+```
+
+---
+
+# 31. Create a dedicated backup SSH key
+
+Run this in **Windows PowerShell**:
 
 ```powershell
 ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\picraft_backup_ed25519" -C "PiCraft automatic backup"
 ```
 
-Copy **only the public key** to the Pi:
+This creates a dedicated SSH key for the automatic backup system.
+
+Copy **only the public key** to the Raspberry Pi:
 
 ```powershell
 Get-Content "$env:USERPROFILE\.ssh\picraft_backup_ed25519.pub" | ssh admin@192.168.10.2 "umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys"
 ```
 
-Test passwordless authentication:
+Test it:
 
 ```powershell
 ssh -i "$env:USERPROFILE\.ssh\picraft_backup_ed25519" admin@192.168.10.2 "echo AUTOMATIC_BACKUP_SSH_WORKS"
 ```
 
-Never commit `picraft_backup_ed25519` (the private key) to GitHub.
+It should return:
 
-### Create the sync script
+```text
+AUTOMATIC_BACKUP_SSH_WORKS
+```
 
-The working script is saved as:
+> [!CAUTION]
+> Never upload this file to GitHub:
+>
+> ```text
+> picraft_backup_ed25519
+> ```
+>
+> It is the private SSH key.
+
+---
+
+# 32. Create the Windows backup sync script
+
+The sync script is stored at:
 
 ```text
 %USERPROFILE%\Documents\PiCraft-Backup-Sync.ps1
 ```
 
-Its configuration is:
-
-```powershell
-$Pi = "admin@192.168.10.2"
-$Key = "$env:USERPROFILE\.ssh\picraft_backup_ed25519"
-$RemoteDir = "/home/admin/minecraft-backups"
-$LocalDir = "$env:USERPROFILE\Documents\PiCraft Backups"
-```
-
-The final working script (including the later fix so 14-day cleanup still runs when the Pi is unreachable) is:
+Run the following in Windows PowerShell:
 
 ```powershell
 @'
@@ -892,98 +1720,269 @@ Write-Host "PiCraft backup sync complete."
 '@ | Set-Content "$env:USERPROFILE\Documents\PiCraft-Backup-Sync.ps1"
 ```
 
-The script:
-
-1. Finds `PiCraft-*.tar.gz` on the Pi.
-2. Copies the archive and matching `.sha256` file with `scp`.
-3. Verifies the Windows copy with `Get-FileHash -Algorithm SHA256`.
-4. Deletes the Pi copy only after successful verification.
-5. Keeps the Pi copy if copying or verification fails.
-6. Deletes Windows `PiCraft-*` files older than 14 days.
-
-Test the script manually:
+Test it manually:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Documents\PiCraft-Backup-Sync.ps1"
 ```
 
-Check the backup folder:
+Check the Windows backup folder:
 
 ```powershell
 Get-ChildItem "$env:USERPROFILE\Documents\PiCraft Backups"
 ```
 
-### Run the Windows sync every 30 minutes
+The process is:
 
-Create the scheduled task exactly as used in the working setup:
+```text
+Raspberry Pi creates backup
+            ↓
+Windows copies backup
+            ↓
+Windows copies SHA-256 file
+            ↓
+Windows verifies SHA-256
+            ↓
+If verification succeeds
+            ↓
+Pi copy is removed
+            ↓
+Windows keeps backup for 14 days
+```
+
+If verification fails, the backup remains on the Raspberry Pi.
+
+---
+
+# 33. Automatically sync backups to Windows
+
+The Windows PC checks the Raspberry Pi every 30 minutes.
+
+Create the scheduled task in Windows PowerShell:
 
 ```powershell
 schtasks /Create /SC MINUTE /MO 30 /TN "PiCraft Backup Sync" /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$env:USERPROFILE\Documents\PiCraft-Backup-Sync.ps1`"" /F
 ```
 
-Verify it:
+Check it:
 
 ```powershell
 schtasks /Query /TN "PiCraft Backup Sync"
 ```
 
-The final behavior is:
+If the laptop is turned off or away from the home network, nothing is lost.
+
+The Raspberry Pi keeps the backup until the Windows PC successfully copies and verifies it.
+
+---
+
+# 34. Backup retention
+
+The backup system is designed for:
 
 ```text
-Pi creates backup every 48 hours
-          ↓
-Windows checks every 30 minutes when the laptop is on
-          ↓
-archive + SHA-256 file copied
-          ↓
-Windows verifies SHA-256
-          ↓
-verified Pi copy removed
-          ↓
-Windows keeps backups for 14 days
+Backup interval: 48 hours
+Windows retention: 14 days
 ```
 
-If the laptop is off or away from the home network, the backup stays on the Pi until a later sync succeeds.
+Windows automatically removes PiCraft backup files older than 14 days.
 
-## 17. Final service checks
+---
 
-Check the important services:
+# 35. Final checks
+
+## Minecraft
 
 ```bash
-echo "=== MINECRAFT ==="
 systemctl is-active minecraft
-echo "=== PLAYIT ==="
-systemctl is-active playit
-echo "=== DASHBOARD ==="
-systemctl is-active picraft-dashboard
-echo "=== COLLECTOR ==="
-systemctl is-active picraft-collector
-echo "=== BACKUP TIMER ==="
-systemctl is-active picraft-backup.timer
-echo "=== TEMPERATURE ==="
-vcgencmd measure_temp
-echo "=== MEMORY ==="
-free -h
-echo "=== IP ==="
-hostname -I
 ```
 
-Port Warp uses a user service, so also check:
+Expected:
+
+```text
+active
+```
+
+## Playit
+
+```bash
+systemctl is-active playit
+```
+
+Expected:
+
+```text
+active
+```
+
+## Port Warp
 
 ```bash
 pwrp ps --once
 ```
 
-## Security notes
+## Dashboard
 
-Do **not** commit any of the following to a public repository:
+```bash
+systemctl is-active picraft-dashboard
+```
 
-- Dashboard passwords
-- Playit claim/authentication URLs or tokens
+Expected:
+
+```text
+active
+```
+
+## Metrics collector
+
+```bash
+systemctl is-active picraft-collector
+```
+
+Expected:
+
+```text
+active
+```
+
+## Backup timer
+
+```bash
+systemctl is-active picraft-backup.timer
+```
+
+Expected:
+
+```text
+active
+```
+
+## Tailscale
+
+```bash
+tailscale status
+```
+
+## Raspberry Pi temperature
+
+```bash
+vcgencmd measure_temp
+```
+
+## RAM
+
+```bash
+free -h
+```
+
+## Storage
+
+```bash
+df -h /
+```
+
+## IP address
+
+```bash
+hostname -I
+```
+
+---
+
+# 36. Useful restart commands
+
+Restart Minecraft:
+
+```bash
+sudo systemctl restart minecraft
+```
+
+Restart Playit:
+
+```bash
+sudo systemctl restart playit
+```
+
+Restart the dashboard:
+
+```bash
+sudo systemctl restart picraft-dashboard
+```
+
+Restart the metrics collector:
+
+```bash
+sudo systemctl restart picraft-collector
+```
+
+Reboot the Raspberry Pi:
+
+```bash
+sudo reboot
+```
+
+Safely shut down the Raspberry Pi:
+
+```bash
+sudo poweroff
+```
+
+> [!CAUTION]
+> Do not simply unplug the Raspberry Pi while it is running. Shut it down first to reduce the risk of corrupting the microSD card.
+
+---
+
+# 37. Security
+
+Never commit any of the following to a public GitHub repository:
+
+- Raspberry Pi password
+- Raspberry Pi Connect auth keys
+- Raspberry Pi ID credentials
+- Dashboard password
+- Playit claim links
+- Playit authentication tokens
 - Port Warp authentication credentials
-- Live public server addresses unless you deliberately want to advertise the server
+- Tailscale authentication URLs
+- Tailscale authentication keys
 - SSH private keys
-- Tailscale authentication URLs or keys
-- Any `.env` file containing secrets
+- Backup SSH private key
+- `.env` files containing secrets
+- Live public Minecraft addresses unless you deliberately want to advertise the server
 
-The Minecraft player routes may be public, but the dashboard on port `8080` should remain private and accessed locally or over Tailscale.
+The public Minecraft tunnels are for players.
+
+The PiCraft dashboard on port `8080` should remain private and be accessed:
+
+- From the local network
+- Through Tailscale
+
+Raspberry Pi administration can be performed using:
+
+- Raspberry Pi Connect
+- SSH
+- Tailscale
+
+---
+
+# Finished
+
+At this point PiCraftSMP has:
+
+- A Paper Minecraft Java server
+- Automatic Minecraft startup
+- Custom server icon
+- Custom server-list MOTD
+- Raspberry Pi Connect administration
+- SSH backup administration
+- Playit public connectivity
+- An optional second public route using Port Warp
+- Private Tailscale networking
+- A custom monitoring dashboard
+- Historical metrics
+- Automatic 48-hour world backups
+- SHA-256 backup verification
+- Automatic Windows backup syncing
+- 14-day Windows backup retention
+
+The Raspberry Pi can now operate as an always-on PiCraftSMP Minecraft server.
