@@ -49,7 +49,7 @@ flowchart LR
 | Raspberry Pi OS | Server operating system |
 | Java | Runs the Minecraft server |
 | Minecraft Java Server | PiCraftSMP game server |
-| Playit.gg | Public Minecraft access |
+| Playit | Public Minecraft access |
 | Port Warp | Additional server connectivity |
 | Tailscale | Private remote access |
 | SSH | Remote server administration |
@@ -61,7 +61,7 @@ flowchart LR
 
 PiCraftSMP is designed to be accessible remotely while keeping server administration separate from normal player access.
 
-### Playit.gg
+### Playit
 
 Playit.gg provides public Minecraft access without requiring traditional router port forwarding. Players can connect to the server without installing additional networking software.
 
@@ -116,7 +116,7 @@ This provides both local and off-device copies of important server data.
 ```mermaid
 flowchart TD
     A[Minecraft Players] --> B[Public Access]
-    B --> C[Playit.gg / Port Warp]
+    B --> C[Playit / Port Warp]
     C --> D[Raspberry Pi 4]
     D --> E[PiCraftSMP]
     D --> F[Web Dashboard]
