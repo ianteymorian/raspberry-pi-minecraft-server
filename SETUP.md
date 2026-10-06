@@ -4,7 +4,6 @@ This guide explains how PiCraftSMP was built from scratch.
 
 PiCraftSMP is a 24/7 Paper Minecraft Java server running on a Raspberry Pi 4 with:
 
-- 8 GB RAM
 - Raspberry Pi OS Lite 64-bit
 - Raspberry Pi Connect remote administration
 - SSH backup access
@@ -17,11 +16,6 @@ PiCraftSMP is a 24/7 Paper Minecraft Java server running on a Raspberry Pi 4 wit
 - Automatic backup transfer to a Windows PC
 - 14-day backup retention
 
-> [!IMPORTANT]
-> This repository does not contain passwords, authentication keys, private SSH keys, Playit claim tokens, Port Warp credentials, Tailscale authentication details, or the live public Minecraft addresses.
->
-> Never put those values in a public GitHub repository.
-
 ---
 
 # 1. Hardware
@@ -29,7 +23,6 @@ PiCraftSMP is a 24/7 Paper Minecraft Java server running on a Raspberry Pi 4 wit
 PiCraftSMP was built using:
 
 - Raspberry Pi 4
-- 8 GB RAM
 - microSD card
 - Active cooling
 - USB-C Raspberry Pi power supply
