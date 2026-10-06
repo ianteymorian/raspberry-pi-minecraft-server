@@ -52,8 +52,8 @@ Configure the Pi with these settings:
 | Setting | PiCraftSMP value / what to enter |
 |---|---|
 | Hostname | `RasPi-Sever` was used on the original build. `picraftsmp` is a cleaner name if starting again. |
-| Username | `admin` |
-| Password | Create a strong password. **Do not put it in GitHub.** |
+| Username | `anything you like` |
+| Password | Create a strong password. |
 | Wi-Fi SSID | Your Wi-Fi network name, if using Wi-Fi |
 | Wi-Fi password | Your Wi-Fi password, if using Wi-Fi |
 | Wi-Fi country | The country where the Pi is physically being used |
