@@ -275,8 +275,7 @@ sudo journalctl -u playit -f
 playit setup
 ```
 
-> [!WARNING]
-> Do not publish Playit claim links or authentication tokens.
+
 
 ---
 
