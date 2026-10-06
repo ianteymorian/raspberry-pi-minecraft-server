@@ -148,6 +148,4 @@ Building PiCraftSMP provided practical experience with:
 - Web-based server monitoring
 - Minecraft server administration
 
-## Security
 
-Sensitive information such as SSH private keys, authentication tokens, tunnel credentials, IP addresses, and other secrets are not included in this repository.
