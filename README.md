@@ -40,6 +40,7 @@ flowchart LR
 | Cooling | Active cooling |
 | Network | Ethernet / Wi-Fi |
 | Backup device | Windows PC |
+| Storge | 32GB Micro SD card |
 
 ## Software
 
