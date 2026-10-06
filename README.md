@@ -128,8 +128,8 @@ flowchart TD
 
 ## Documentation
 
-- 📖 **[Setup Guide](SETUP.md)** — Complete step-by-step instructions for building the server from scratch.
-- ⚡ **[Commands](COMMANDS.md)** — Quick reference for Minecraft, Raspberry Pi, networking, backups, and administration commands.
+-  **[Setup Guide](SETUP.md)** — Complete step-by-step instructions for building the server from scratch.
+-  **[Commands](COMMANDS.md)** — Quick reference for Minecraft, Raspberry Pi, networking, backups, and administration commands.
 
 ## Screenshots
 
