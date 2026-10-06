@@ -128,7 +128,8 @@ flowchart TD
 
 ## Screenshots
 
-<img width="2388" height="1297" alt="IMG_9884" src="https://github.com/user-attachments/assets/7903d402-93df-4e0b-bde4-b8b0712f22c3" />
+<img width="2388" height="1384" alt="IMG_9883" src="https://github.com/user-attachments/assets/06d8e1ef-1e6c-4cdd-bb8c-e5b2285d9c59" />
+
 <img width="2388" height="1297" alt="ChatGPT Image Oct 6, 2026, 05_14_51 PM" src="https://github.com/user-attachments/assets/a96f78fb-4823-4c53-bfbb-da44762132bf" />
 
 
