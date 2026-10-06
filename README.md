@@ -23,7 +23,7 @@ Players can connect remotely to PiCraftSMP while the Minecraft server runs conti
 
 ```mermaid
 flowchart LR
-    A[Minecraft Players] --> B[Playit.gg / Port Warp]
+    A[Minecraft Players] --> B[Playit / Port Warp]
     B --> C[Raspberry Pi 4]
     C --> D[PiCraftSMP]
     C --> E[Web Dashboard]
